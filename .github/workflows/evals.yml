@@ -1,0 +1,37 @@
+name: Evals
+
+# Manual only, so API spend is always intentional.
+on:
+  workflow_dispatch:
+    inputs:
+      variants:
+        description: "Space-separated variant names (blank = all in variants.yaml)"
+        default: ""
+      tags:
+        description: "Space-separated case tags to include (blank = all cases)"
+        default: ""
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync
+      - name: Run evals
+        if: env.ANTHROPIC_API_KEY != ''
+        run: |
+          args=""
+          for v in ${{ inputs.variants }}; do args="$args --variant $v"; done
+          for t in ${{ inputs.tags }}; do args="$args --tag $t"; done
+          uv run evalh run $args --out results/ci-run --no-cache
+      - name: Skip (no API key secret)
+        if: env.ANTHROPIC_API_KEY == ''
+        run: echo "::warning::ANTHROPIC_API_KEY secret not set; skipping eval run."
+      - uses: actions/upload-artifact@v4
+        if: env.ANTHROPIC_API_KEY != ''
+        with:
+          name: eval-report
+          path: results/ci-run/
