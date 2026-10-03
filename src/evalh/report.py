@@ -11,6 +11,12 @@ def _pct(v: float | None) -> str:
     return "-" if v is None else f"{v * 100:.1f}%"
 
 
+def _num(v: float | None) -> str:
+    if v is None:
+        return "-"
+    return f"{v:,.0f}" if abs(v) >= 100 else f"{v:.4g}"
+
+
 def _delta(a: float | None, b: float | None, pct_points: bool) -> str:
     if a is None or b is None:
         return "-"
@@ -55,7 +61,7 @@ def compare_table(base_name: str, base: dict, new_name: str, new: dict) -> str:
     lines = [f"| metric | {base_name} | {new_name} | change |", "|---|---|---|---|"]
     for key, is_rate in metrics:
         a, b = base.get(key), new.get(key)
-        fmt = _pct if is_rate else (lambda x: "-" if x is None else f"{x:,.4g}")
+        fmt = _pct if is_rate else _num
         lines.append(f"| {key} | {fmt(a)} | {fmt(b)} | {_delta(a, b, is_rate)} |")
     return "\n".join(lines) + "\n"
 
