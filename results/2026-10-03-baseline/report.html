@@ -1,0 +1,19 @@
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Agent Eval Report</title>
+<style>
+:root{--bg:#fff;--fg:#1a1a1a;--muted:#666;--acc:#2f7d4f;--tok:#3b6bc4;--line:#e5e5e5}
+@media (prefers-color-scheme:dark){:root{--bg:#121212;--fg:#eee;--muted:#999;--line:#333}}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif;margin:0;padding:24px 16px}
+main{max-width:960px;margin:auto} table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th small{display:block;color:var(--muted);font-weight:400}
+.bar{height:22px;border-radius:4px;position:relative;min-width:2px}
+.bar span{position:absolute;left:6px;top:1px;color:#fff;font-size:13px;white-space:nowrap}
+.acc{background:var(--acc)} .tok{background:var(--tok)}
+.wrap{overflow-x:auto}
+</style></head><body><main>
+<h1>Agent eval: 2026-10-03-baseline</h1>
+<p>53 cases · 2026-10-03T21:50:45+00:00</p>
+<div class="wrap"><table><tr><th>variant</th><th>accuracy</th><th>tokens / task</th><th>$ / task</th>
+<th>p50 latency</th></tr><tr><th>v1-inline-haiku<small>claude-haiku-4-5-20251001 · skills_v1 · inline_all</small></th><td><div class="bar acc" style="width:86.8%"><span>86.8%</span></div></td><td><div class="bar tok" style="width:100.0%"><span>26,468</span></div></td><td>$0.0292</td><td>8.7s</td></tr><tr><th>v1-progressive-haiku<small>claude-haiku-4-5-20251001 · skills_v1 · progressive</small></th><td><div class="bar acc" style="width:88.7%"><span>88.7%</span></div></td><td><div class="bar tok" style="width:38.4%"><span>10,154</span></div></td><td>$0.0131</td><td>9.5s</td></tr><tr><th>v2-inline-haiku<small>claude-haiku-4-5-20251001 · skills · inline_all</small></th><td><div class="bar acc" style="width:88.7%"><span>88.7%</span></div></td><td><div class="bar tok" style="width:50.1%"><span>13,252</span></div></td><td>$0.0161</td><td>9.3s</td></tr><tr><th>v2-progressive-haiku<small>claude-haiku-4-5-20251001 · skills · progressive</small></th><td><div class="bar acc" style="width:92.5%"><span>92.5%</span></div></td><td><div class="bar tok" style="width:28.0%"><span>7,400</span></div></td><td>$0.0102</td><td>9.2s</td></tr><tr><th>v2-progressive-sonnet<small>claude-sonnet-5-5 · skills · progressive</small></th><td><div class="bar acc" style="width:1.0%"><span>0.0%</span></div></td><td><div class="bar tok" style="width:1.0%"><span>0</span></div></td><td>$0.0000</td><td>0.0s</td></tr></table></div>
+</main></body></html>

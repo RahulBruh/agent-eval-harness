@@ -65,7 +65,6 @@ JUDGE_PROMPT = """You grade replies from a game-support triage agent. Score 1-5:
 async def judge_reply(case: Case, result: dict, model: str) -> int:
     from langchain_anthropic import ChatAnthropic
     from langchain_core.messages import HumanMessage, SystemMessage
-
     from support_agent.llm import anthropic_headers
 
     chat = ChatAnthropic(

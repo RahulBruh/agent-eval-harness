@@ -17,7 +17,7 @@ from . import gate as gate_mod
 from .dataset import load_cases
 from .metrics import summarize
 from .report import compare_table, summary_table, write_results
-from .runner import Cache, agent_fingerprint, load_variants, run_variant
+from .runner import Cache, Record, agent_fingerprint, load_variants, run_variant
 
 for _s in (sys.stdout, sys.stderr):
     if hasattr(_s, "reconfigure"):
@@ -112,13 +112,26 @@ def compare(
 
 
 @app.command()
-def baseline(results: Path, variant: str, out: Path = Path("baselines/baseline.json")):
-    """Save one variant's summary from a run as the regression baseline."""
+def baseline(
+    results: Path,
+    variant: str,
+    out: Path = Path("baselines/baseline.json"),
+    tag: ListOpt = None,
+):
+    """Save one variant's summary as the regression baseline (optionally only cases with --tag)."""
     data = _load(results)
+    summary = data["summaries"][variant]
+    if tag:
+        recs = [
+            Record(**r)
+            for r in data["records"]
+            if r["variant"] == variant and set(tag) & set(r["tags"])
+        ]
+        summary = summarize(recs)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(
         json.dumps(
-            {"variant": variant, "meta": data["meta"], "summary": data["summaries"][variant]},
+            {"variant": variant, "tags": tag or [], "meta": data["meta"], "summary": summary},
             indent=1,
         ),
         encoding="utf-8",

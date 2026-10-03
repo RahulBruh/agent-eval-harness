@@ -15,7 +15,7 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     denom = 1 + z * z / n
     centre = (p + z * z / (2 * n)) / denom
     half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / denom
-    return (round(centre - half, 4), round(centre + half, 4))
+    return (round(max(0.0, centre - half), 4), round(min(1.0, centre + half), 4))
 
 
 def _rate(values: list[bool | None]) -> float | None:
