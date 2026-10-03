@@ -66,7 +66,15 @@ async def judge_reply(case: Case, result: dict, model: str) -> int:
     from langchain_anthropic import ChatAnthropic
     from langchain_core.messages import HumanMessage, SystemMessage
 
-    chat = ChatAnthropic(model=model, temperature=0, max_tokens=300, max_retries=4)
+    from support_agent.llm import anthropic_headers
+
+    chat = ChatAnthropic(
+        model=model,
+        temperature=0,
+        max_tokens=300,
+        max_retries=4,
+        default_headers=anthropic_headers() or None,
+    )
     verdict = await chat.with_structured_output(JudgeVerdict).ainvoke(
         [
             SystemMessage(JUDGE_PROMPT),
