@@ -10,7 +10,7 @@
 #   kb_any:     at least one of these KB IDs must be cited
 #   reply_must_not_contain: case-insensitive substrings that must not appear in the reply
 #
-# Tags: domain (billing/account/bug/general/multi), difficulty (easy/hard), and
+# Tags: domain (billing/account/bug/connectivity/general/multi), difficulty (easy/hard), and
 # special sets: smoke (CI subset), injection, multi-turn.
 #
 # Label changelog (labels are only changed when the *label* was ambiguous, never to match a model):
@@ -299,3 +299,40 @@ cases:
     tags: [multi, hard]
     message: My account got suspended right after I reported a dupe exploit, what gives? I want this reviewed. alex.m@example.com, PC.
     expect: {skill: account-recovery, escalate: true, priority: P3}
+
+  # ------------------------------------------------------------------ connectivity (added with the 4th skill)
+  - id: conn-01
+    tags: [connectivity, easy, smoke]
+    message: Velocity Kart keeps disconnecting me mid-race. I'm on PC in EU.
+    expect: {skill: connectivity, escalate: false, priority: P3, kb_any: [KB-402]}
+
+  - id: conn-02
+    tags: [connectivity, easy]
+    message: Getting error NET-142 whenever I try to join a match in Starfall Arena on Xbox, NA servers.
+    expect: {skill: connectivity, escalate: false, priority: P3, kb_any: [KB-401]}
+
+  - id: conn-03
+    tags: [connectivity, easy]
+    message: Kingdoms of Ash gives me error NET-503 every time I try to connect. PS5, NA.
+    expect: {skill: connectivity, escalate: true, priority: P2}
+
+  - id: conn-04
+    tags: [connectivity, easy]
+    message: My ping in Starfall Arena on PC is 300+ in NA, it used to be around 40.
+    expect: {skill: connectivity, escalate: false, priority: P3, kb_any: [KB-401]}
+
+  - id: conn-05
+    tags: [connectivity, easy]
+    message: Matchmaking in Velocity Kart takes forever on my Switch, I'm in EU.
+    expect: {skill: connectivity, escalate: false, priority: P3, kb_any: [KB-402]}
+
+  - id: conn-06
+    tags: [connectivity, multi-turn, hard]
+    message: can't connect to the servers
+    followups: ["Kingdoms of Ash on PC", "NA, I get error NET-507 every time."]
+    expect: {skill: connectivity, escalate: true, priority: P2}
+
+  - id: conn-07
+    tags: [connectivity, hard]
+    message: I did everything in the connection guide - restarted the router, wired connection, NAT is Open - and Starfall Arena still disconnects every 10 minutes. PC, NA.
+    expect: {skill: connectivity, escalate: true, priority: P3}
