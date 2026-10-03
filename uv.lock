@@ -1406,7 +1406,7 @@ wheels = [
 [[package]]
 name = "skills-support-agent"
 version = "0.1.0"
-source = { git = "https://github.com/RahulBruh/skills-support-agent?branch=main#efa5f8c3874315d60ec29ca06867432f29b39cf1" }
+source = { git = "https://github.com/RahulBruh/skills-support-agent?branch=main#84f71d2be43f3cc99e5be6146ecceede4e589ef8" }
 dependencies = [
     { name = "langchain-anthropic" },
     { name = "langchain-core" },
