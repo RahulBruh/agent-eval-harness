@@ -45,13 +45,16 @@ def run(
     judge_model: Annotated[str | None, typer.Option(help="Enable LLM-judge reply scoring.")] = None,
 ):
     """Run cases against variants and write results.json, summary.md and report.html."""
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        console.print("[red]ANTHROPIC_API_KEY is not set.[/]")
-        raise typer.Exit(2)
     variants, defaults = load_variants(variants_file)
     chosen = {k: v for k, v in variants.items() if not variant or k in variant}
     if not chosen:
         raise typer.BadParameter(f"no variants match {variant}; available: {list(variants)}")
+    needs_key = any(v.provider == "anthropic" for v in chosen.values()) or judge_model
+    if needs_key and not os.environ.get("ANTHROPIC_API_KEY"):
+        console.print(
+            "[red]ANTHROPIC_API_KEY is not set (needed for anthropic-provider variants).[/]"
+        )
+        raise typer.Exit(2)
     cases = load_cases(cases_file, tags=tag, ids=case_id)
     today = defaults.get("today", datetime.now(UTC).date().isoformat())
     cache = Cache(None if no_cache else cache_dir)
@@ -163,6 +166,33 @@ def gate(
             console.print(f"[red]REGRESSION[/] {f}")
         raise typer.Exit(1)
     console.print("[green]Gate passed.[/]")
+
+
+@app.command()
+def publish(
+    run_dir: Annotated[Path, typer.Argument(help="Directory containing results.json.")],
+    bucket: Annotated[
+        str | None, typer.Option(envvar="EVALH_RESULTS_BUCKET", help="S3 bucket for the run.")
+    ] = None,
+    run_id: Annotated[
+        str | None, typer.Option(help="Folder name under runs/<date>/ (default: timestamp).")
+    ] = None,
+    source: Annotated[
+        str, typer.Option(help="Where the run came from, e.g. harness, agent-pr.")
+    ] = ("local"),
+    metrics: Annotated[bool, typer.Option(help="Push CloudWatch metrics (AgentEvals).")] = True,
+):
+    """Upload a run to S3 and push accuracy, cost, tokens and latency to CloudWatch."""
+    from .publish import publish as do_publish
+
+    run_id = run_id or datetime.now(UTC).strftime("%H%M%S")
+    out = do_publish(run_dir, bucket=bucket, run_id=run_id, source=source, metrics=metrics)
+    for url in out["uploaded"]:
+        console.print(f"[green]uploaded[/] {url}")
+    console.print(f"[green]metrics[/] {out['metrics']} data points -> CloudWatch AgentEvals")
+    if (step_summary := os.environ.get("GITHUB_STEP_SUMMARY")) and out["uploaded"]:
+        with open(step_summary, "a", encoding="utf-8") as f:
+            f.write(f"\n**Published:** `{out['uploaded'][0].rsplit('/', 1)[0]}/`\n")
 
 
 @app.command()
