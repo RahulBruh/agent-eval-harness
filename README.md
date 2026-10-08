@@ -70,12 +70,17 @@ uv run evalh run --variant v2-progressive-haiku --tag smoke --out results/smoke
 uv run evalh compare results/<run>/results.json --base v1-inline-haiku --new v2-progressive-haiku
 uv run evalh baseline results/<run>/results.json v2-progressive-haiku --tag smoke --out baselines/smoke.json
 uv run evalh gate results/<run>/results.json --baseline baselines/smoke.json   # exit 1 on regression
+uv run --extra aws evalh publish results/<run> --bucket <bucket> --source local  # S3 + CloudWatch
 ```
+
+**Bedrock.** A variant with `provider: bedrock` (e.g. `v2-progressive-haiku-bedrock`) runs the same agent on Amazon Bedrock using your AWS credentials, so one run can compare the two providers.
+
+**Trends.** `evalh publish` uploads `results.json`, `summary.md` and `report.html` to `s3://<bucket>/runs/<date>/<run-id>/`. It also pushes accuracy, cost per task, tokens per task, p50/p95 latency and error count to CloudWatch (namespace `AgentEvals`, per `Variant`, optionally split by `Source`). The `agent-evals` dashboard, defined in the agent repo's CDK app, plots them over time, so a slow regression shows up as a trend line before it trips the gate.
 
 ## CI
 
 - [`ci.yml`](.github/workflows/ci.yml): lint, unit tests for scorers/metrics/gate/cache, and **dataset integrity** (every label names a real skill, KB article and priority). No API key needed.
-- [`evals.yml`](.github/workflows/evals.yml): full benchmark on manual dispatch only, so API spend is always intentional. Uploads the report as an artifact.
+- [`evals.yml`](.github/workflows/evals.yml): full benchmark on manual dispatch only, so API spend is always intentional. Uploads the report as an artifact. When the repo variable `AWS_EVAL_ROLE_ARN` is set, the job signs in to AWS through **GitHub OIDC** (no stored AWS keys), can run Bedrock variants, and publishes the run to S3 and CloudWatch.
 - In the agent repo, [`evals.yml`](https://github.com/RahulBruh/skills-support-agent/blob/main/.github/workflows/evals.yml) runs this harness's smoke set on every PR that touches skills, code or data. It fails the PR if accuracy drops more than 10 pp or tokens per task rise more than 25% against the [committed baseline](https://github.com/RahulBruh/skills-support-agent/blob/main/baselines/smoke-baseline.json). For example, running the gate against the verbose *before* config fails with `tokens_per_task rose 7,597 -> 26,468 (allowed +25%)`.
 
 ## Limitations

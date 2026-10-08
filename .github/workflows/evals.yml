@@ -1,6 +1,11 @@
 name: Evals
 
 # Manual only, so API spend is always intentional.
+#
+# AWS (optional): set the repository *variables* (not secrets) AWS_EVAL_ROLE_ARN and
+# EVALH_RESULTS_BUCKET from the agent repo's SupportAgentCi stack outputs. The job then signs in
+# with GitHub OIDC (no stored AWS keys), can run Bedrock variants, and publishes the run to S3
+# and CloudWatch (namespace AgentEvals).
 on:
   workflow_dispatch:
     inputs:
@@ -11,27 +16,48 @@ on:
         description: "Space-separated case tags to include (blank = all cases)"
         default: ""
 
+permissions:
+  contents: read
+  id-token: write # lets the job request an OIDC token for AWS
+
 jobs:
   eval:
     runs-on: ubuntu-latest
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      AWS_ROLE: ${{ vars.AWS_EVAL_ROLE_ARN }}
+      EVALH_RESULTS_BUCKET: ${{ vars.EVALH_RESULTS_BUCKET }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
-      - run: uv sync
+      - run: uv sync --extra aws
+
+      - name: AWS credentials via OIDC
+        if: env.AWS_ROLE != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE }}
+          role-session-name: evals-${{ github.run_id }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
       - name: Run evals
-        if: env.ANTHROPIC_API_KEY != ''
+        if: env.ANTHROPIC_API_KEY != '' || env.AWS_ROLE != ''
         run: |
           args=""
           for v in ${{ inputs.variants }}; do args="$args --variant $v"; done
           for t in ${{ inputs.tags }}; do args="$args --tag $t"; done
           uv run evalh run $args --out results/ci-run --no-cache
-      - name: Skip (no API key secret)
-        if: env.ANTHROPIC_API_KEY == ''
-        run: echo "::warning::ANTHROPIC_API_KEY secret not set; skipping eval run."
+
+      - name: Publish to S3 and CloudWatch
+        if: env.AWS_ROLE != ''
+        run: uv run evalh publish results/ci-run --run-id "run-${{ github.run_id }}" --source harness
+
+      - name: Skip (no credentials)
+        if: env.ANTHROPIC_API_KEY == '' && env.AWS_ROLE == ''
+        run: echo "::warning::Neither ANTHROPIC_API_KEY nor AWS_EVAL_ROLE_ARN is set; skipping."
+
       - uses: actions/upload-artifact@v4
-        if: env.ANTHROPIC_API_KEY != ''
+        if: always() && hashFiles('results/ci-run/results.json') != ''
         with:
           name: eval-report
           path: results/ci-run/

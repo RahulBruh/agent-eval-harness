@@ -24,6 +24,11 @@ class Variant(BaseModel):
     model: str
     skills_dir: str = "skills"
     context_mode: str = "progressive"
+    provider: str = "anthropic"  # anthropic | bedrock (needs AWS credentials)
+
+    def cache_identity(self) -> dict:
+        """Config that affects results; omits the default provider so older cache keys hold."""
+        return self.model_dump(exclude={"provider"} if self.provider == "anthropic" else None)
 
 
 class Record(BaseModel):
@@ -98,6 +103,8 @@ async def run_variant(
         skills_dir=variant.skills_dir,
         context_mode=variant.context_mode,
         today=today,
+        # Only pass provider when non-default, so agent versions without it keep working.
+        **({"provider": variant.provider} if variant.provider != "anthropic" else {}),
     )
     fp = agent_fingerprint(variant.skills_dir)
     sem = asyncio.Semaphore(concurrency)
@@ -106,7 +113,7 @@ async def run_variant(
     async with SupportAgent(cfg) as agent:
 
         async def one(case: Case, rep: int) -> Record:
-            key = Cache.key(variant.model_dump(), case.message, case.followups, today, fp, rep)
+            key = Cache.key(variant.cache_identity(), case.message, case.followups, today, fp, rep)
             hit = cache.get(key)
             result, error, cached = (hit, None, True) if hit else (None, None, False)
             if not hit:

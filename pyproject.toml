@@ -15,11 +15,22 @@ dependencies = [
 [project.scripts]
 evalh = "evalh.cli:app"
 
+[project.optional-dependencies]
+aws = [
+    "boto3>=1.35",
+]
+
 [tool.uv.sources]
 skills-support-agent = { git = "https://github.com/RahulBruh/skills-support-agent", branch = "main" }
 
 [dependency-groups]
-dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.6"]
+dev = [
+    "boto3>=1.35",
+    "moto[cloudwatch,s3]>=5",
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.6",
+]
 
 [build-system]
 requires = ["hatchling"]

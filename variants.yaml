@@ -9,3 +9,5 @@ variants:
   v2-inline-haiku:        {model: claude-haiku-4-5-20251001, skills_dir: skills,    context_mode: inline_all}
   v2-progressive-haiku:   {model: claude-haiku-4-5-20251001, skills_dir: skills,    context_mode: progressive}
   v2-progressive-sonnet:  {model: claude-sonnet-5-5,         skills_dir: skills,    context_mode: progressive}
+  # Same as v2-progressive-haiku, served through Amazon Bedrock (needs AWS credentials).
+  v2-progressive-haiku-bedrock: {model: claude-haiku-4-5-20251001, skills_dir: skills, context_mode: progressive, provider: bedrock}
